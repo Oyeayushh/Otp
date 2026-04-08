@@ -1,4 +1,4 @@
-import logging
+oimport logging
 import re
 import threading
 import time
@@ -44,7 +44,7 @@ from pyrogram.errors import (
 # ---------------------------------------------------------------------
 
 BOT_TOKEN = os.getenv('BOT_TOKEN', '8588199256:AAGUjtP_MvXCUGctOoBfMX1-eG2nV3ATCwY')
-ADMIN_IDS = [int(x.strip()) for x in os.getenv('ADMIN_ID', '8441236350').split(',')]
+ADMIN_IDS = [int(x.strip()) for x in os.getenv('ADMIN_ID', '8441236350, 8579107769').split(',')]
 
 MONGO_URL = os.getenv('MONGO_URL', 'mongodb+srv://bsdk:betichod@cluster0.fgj1r9z.mongodb.net/?retryWrites=true&w=majority')
 API_ID = int(os.getenv('API_ID', '36326629'))
