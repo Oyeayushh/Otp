@@ -1230,36 +1230,19 @@ def _get_random_sticker_file_id():
     return None
 
 def run_premium_intro(user_id):
-    """Send animated intro with premium custom emoji + random sticker via Bot API"""
+    """Send animated intro messages"""
     try:
-        m1 = bot.send_message(user_id, f"{E_MAGIC_TG} Hlo Sir......", parse_mode='HTML')
+        m1 = bot.send_message(user_id, '✨ Hlo Sir......')
         time.sleep(1)
         bot.delete_message(user_id, m1.message_id)
-        m2 = bot.send_message(user_id, f"{E_DEVIL_TG} Ping Pong........", parse_mode='HTML')
+        m2 = bot.send_message(user_id, '🔥 Ping Pong........')
         time.sleep(1)
         bot.delete_message(user_id, m2.message_id)
-        m3 = bot.send_message(user_id, f"{E_CROWN_TG} Gms OP......", parse_mode='HTML')
+        m3 = bot.send_message(user_id, '💎 Gms OP......')
         time.sleep(1)
         bot.delete_message(user_id, m3.message_id)
-
-        # Send a random sticker from the premium sticker pack
-        sticker_file_id = _get_random_sticker_file_id()
-        if sticker_file_id:
-            bot.send_sticker(user_id, sticker_file_id)
     except Exception as e:
-        logger.error(f"Premium intro error: {e}")
-        try:
-            m1 = bot.send_message(user_id, '✨ Hlo Sir......')
-            time.sleep(1)
-            bot.delete_message(user_id, m1.message_id)
-            m2 = bot.send_message(user_id, '🔥 Ping Pong........')
-            time.sleep(1)
-            bot.delete_message(user_id, m2.message_id)
-            m3 = bot.send_message(user_id, '💎 Gms OP......')
-            time.sleep(1)
-            bot.delete_message(user_id, m3.message_id)
-        except:
-            pass
+        logger.error(f"Intro error: {e}")
 
 # ---------------------------------------------------------------------
 # BOT HANDLERS - UPDATED WITH TWO CHANNELS
@@ -1326,8 +1309,8 @@ Click the buttons below to join both channels, then press VERIFY ✅"""
     
     ensure_user_exists(user_id, msg.from_user.first_name, msg.from_user.username, referred_by)
 
-    # Animated intro with real premium emoji via premium account
-    run_premium_intro(user_id)
+    # Animated intro in background thread (non-blocking)
+    threading.Thread(target=run_premium_intro, args=(user_id,), daemon=True).start()
 
     clean_ui_and_send_menu(user_id, user_id)
 
