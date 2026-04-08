@@ -44,22 +44,24 @@ from pyrogram.errors import (
 # ---------------------------------------------------------------------
 
 BOT_TOKEN = os.getenv('BOT_TOKEN', '8588199256:AAGUjtP_MvXCUGctOoBfMX1-eG2nV3ATCwY')
-ADMIN_IDS = [int(x.strip()) for x in os.getenv('ADMIN_ID', '8441236350, 8579107769').split(',')]
+
+# Owner ID (single owner / super admin)
+OWNER_ID = int(os.getenv('OWNER_ID', '8441236350'))
+OWNER_IDS = [OWNER_ID]
+
+# Admin IDs (can be multiple, comma-separated)
+ADMIN_IDS = [int(x.strip()) for x in os.getenv('ADMIN_IDS', '8579107769').split(',') if x.strip().isdigit()]
+
+# Ensure owner is always in ADMIN_IDS too
+if OWNER_ID not in ADMIN_IDS:
+    ADMIN_IDS.insert(0, OWNER_ID)
+
+# ADMIN_ID alias for backward compatibility (points to owner)
+ADMIN_ID = OWNER_ID
 
 MONGO_URL = os.getenv('MONGO_URL', 'mongodb+srv://bsdk:betichod@cluster0.fgj1r9z.mongodb.net/?retryWrites=true&w=majority')
 API_ID = int(os.getenv('API_ID', '36326629'))
 API_HASH = os.getenv('API_HASH', '823e6e8c081fe363e6d739b39dc19e07')
-
-# Multiple owners support (up to 5, comma-separated in OWNER_IDS env var)
-# e.g. OWNER_IDS=8316947415,6509168409,987654321
-_raw_owner_ids = os.getenv('OWNER_IDS', '')
-OWNER_IDS = [int(x.strip()) for x in _raw_owner_ids.split(',') if x.strip().isdigit()]
-
-# Fix: replace ADMIN_ID with ADMIN_IDS[0] (first admin) or loop over all admins
-if ADMIN_IDS[0] not in OWNER_IDS:
-    OWNER_IDS.insert(0, ADMIN_IDS[0])
-
-OWNER_IDS = OWNER_IDS[:5]  # Max 5 owners
 
 # Recharge QR and UPI settings (configurable via env vars)
 QR_IMAGE_URL = os.getenv('QR_IMAGE_URL', 'https://files.catbox.moe/0mkr56.jpeg')
@@ -253,7 +255,7 @@ def is_super_admin(user_id):
     try:
         return int(user_id) in OWNER_IDS
     except:
-        return str(user_id) == str(ADMIN_ID)
+        return int(user_id) == OWNER_ID
 
 def add_admin(user_id, added_by):
     """Add a new admin (max 5 admins)"""
@@ -313,14 +315,14 @@ def get_all_admins():
     try:
         admins = list(admins_col.find({}))
         # Also include main admin if not in collection
-        main_admin_exists = any(str(a.get("user_id")) == str(ADMIN_ID) for a in admins)
+        main_admin_exists = any(str(a.get("user_id")) == str(OWNER_ID) for a in admins)
         
         admin_list = []
         
         # Add main admin first
         if not main_admin_exists:
             admin_list.append({
-                "user_id": ADMIN_ID,
+                "user_id": OWNER_ID,
                 "username": "Main Admin",
                 "name": "Main Admin",
                 "added_at": datetime.utcnow(),
@@ -405,7 +407,7 @@ def remove_admin_command(msg):
             msg,
             "📋 **Admin List**\n\n"
             "Koi aur admin nahi hai remove karne ke liye.\n\n"
-            f"👑 Main Admin: `{ADMIN_ID}`",
+            f"👑 Main Admin: `{OWNER_ID}`",
             parse_mode="Markdown"
         )
         return
@@ -4267,7 +4269,7 @@ def broadcast_worker(source_msg, pin_silent, pin_loud, send_to_users, admin_chat
         all_users = list(users_col.find())
         for user in all_users:
             uid = user.get("user_id")
-            if uid and uid != ADMIN_ID and uid != admin_id:
+            if uid and uid != OWNER_ID and uid != admin_id:
                 chat_ids.add(uid)
         
         # 2. Get all served chats if collection exists
@@ -4285,7 +4287,7 @@ def broadcast_worker(source_msg, pin_silent, pin_loud, send_to_users, admin_chat
         
         # Separate groups and users
         groups = [cid for cid in all_chats if str(cid).startswith('-')]
-        users = [cid for cid in all_chats if not str(cid).startswith('-') and cid != ADMIN_ID and cid != admin_id]
+        users = [cid for cid in all_chats if not str(cid).startswith('-') and cid != OWNER_ID and cid != admin_id]
         
         # Update status
         bot.edit_message_text(
@@ -4915,9 +4917,10 @@ def chat_handler(msg):
 
 if __name__ == "__main__":
     logger.info(f"🤖 Fixed OTP Bot Starting...")
-    logger.info(f"Admin ID: {ADMIN_ID}")
+    logger.info(f"Owner ID: {OWNER_ID}")
+    logger.info(f"Admin IDs: {ADMIN_IDS}")
     logger.info(f"Bot Token: {BOT_TOKEN[:10]}...")
-    logger.info(f"Global API ID: {GLOBAL_API_IDS}")
+    logger.info(f"Global API ID: {GLOBAL_API_ID}")
     logger.info(f"Global API Hash: {GLOBAL_API_HASH[:10]}...")
     logger.info(f"Referral Commission: {REFERRAL_COMMISSION}%")
     logger.info(f"Must Join Channel 1: {MUST_JOIN_CHANNEL_1}")
@@ -4944,4 +4947,3 @@ if __name__ == "__main__":
         logger.error(f"Bot error: {e}")
         time.sleep(30)
         bot.infinity_polling(timeout=60, long_polling_timeout=60)
-
