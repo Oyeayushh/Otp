@@ -1078,73 +1078,76 @@ def edit_or_resend(chat_id, message_id, text, markup=None, parse_mode=None, phot
         logger.error(f"Error in edit_or_resend: {e}")
         return bot.send_message(chat_id, text, parse_mode=parse_mode, reply_markup=markup)
 
+MENU_BANNER_URL = "https://files.catbox.moe/jg9zln.jpg"
+
 def clean_ui_and_send_menu(chat_id, user_id, text=None, markup=None):
-    """Clean UI and send main menu - FIXED: Always deletes old message"""
+    """Clean UI and send main menu with photo banner"""
     try:
-        # ALWAYS try to delete the previous message
         if user_id in user_last_message:
             try:
                 bot.delete_message(chat_id, user_last_message[user_id])
             except:
                 pass
-        
-        # Main menu caption with expandable blockquotes
+
         caption = (
-            '<tg-emoji emoji-id="5373082993207921989">🌟</tg-emoji> <b>Welcome To GMS OTP Bot</b> <tg-emoji emoji-id="5373082993207921989">🌟</tg-emoji>\n'
+            "🌟 <b>Welcome To GMS OTP Bot</b> 🌟\n"
             "<blockquote expandable>\n"
-            '<tg-emoji emoji-id="5368324170671202286">✨</tg-emoji> Automatic OTPs — Instant & Fast\n'
-            '<tg-emoji emoji-id="5350537057272218572">💎</tg-emoji> Easy to Use — Simple Interface\n'
-            '<tg-emoji emoji-id="5271604874419737411">🔥</tg-emoji> 24/7 Support — Always Here\n'
-            '<tg-emoji emoji-id="5469654973107908278">⚡</tg-emoji> Instant Payment Approvals\n'
+            "✨ Automatic OTPs — Instant &amp; Fast\n"
+            "💎 Easy to Use — Simple Interface\n"
+            "🔥 24/7 Support — Always Here\n"
+            "⚡ Instant Payment Approvals\n"
             "</blockquote>\n"
             "<blockquote expandable>\n"
-            '<tg-emoji emoji-id="5368322952606296312">👑</tg-emoji> <b>How to use GMS Bot:</b>\n'
+            "👑 <b>How to use GMS Bot:</b>\n"
             "1️⃣ Add Funds to Wallet\n"
             "2️⃣ Select Country\n"
             "3️⃣ Buy Account\n"
             "4️⃣ Login via Telegram / Telegram X / Tarbotel\n"
-            "5️⃣ Receive OTP & Done ✅\n"
+            "5️⃣ Receive OTP &amp; Done ✅\n"
             "</blockquote>\n"
-            '<tg-emoji emoji-id="5469654973107908278">⚡</tg-emoji> <b>GMS — Fast. Reliable. Always On!</b>'
+            "⚡ <b>GMS — Fast. Reliable. Always On!</b>"
         )
-        
+
         if markup is None:
             markup = InlineKeyboardMarkup(row_width=2)
-            # Row 1: 2 buttons
             markup.add(
-                InlineKeyboardButton("🛍️ Buy Account", callback_data="buy_account", style="success"),
-                InlineKeyboardButton("💎 My Balance", callback_data="balance", style="primary")
+                InlineKeyboardButton("🛒 Buy Account", callback_data="buy_account"),
+                InlineKeyboardButton("💰 My Balance", callback_data="balance")
             )
-            # Row 2: 1 button
             markup.add(
-                InlineKeyboardButton("💸 Add Funds", callback_data="recharge", style="success")
+                InlineKeyboardButton("💳 Add Funds", callback_data="recharge")
             )
-            # Row 3: 2 buttons
             markup.add(
-                InlineKeyboardButton("🤝 Refer & Earn", callback_data="refer_friends", style="primary"),
-                InlineKeyboardButton("🎁 Redeem Coupon", callback_data="redeem_coupon", style="danger")
+                InlineKeyboardButton("🤝 Refer & Earn", callback_data="refer_friends"),
+                InlineKeyboardButton("🎁 Redeem Coupon", callback_data="redeem_coupon")
             )
-            # Row 4: 1 button
             markup.add(
-                InlineKeyboardButton("🆘 Support", callback_data="support", style="primary")
+                InlineKeyboardButton("🆘 Support", callback_data="support")
             )
-            # Row 5: 1 button (only for admin)
             if is_admin(user_id):
-                markup.add(InlineKeyboardButton("⚡ Admin Panel", callback_data="admin_panel", style="danger"))
-        
-        # Send new message (TEXT ONLY - NO PHOTO)
-        sent_msg = bot.send_message(
-            chat_id,
-            text or caption,
-            parse_mode="HTML",
-            reply_markup=markup,
-            disable_web_page_preview=True
-        )
+                markup.add(InlineKeyboardButton("⚙️ Admin Panel", callback_data="admin_panel"))
+
+        try:
+            sent_msg = bot.send_photo(
+                chat_id,
+                MENU_BANNER_URL,
+                caption=text or caption,
+                parse_mode="HTML",
+                reply_markup=markup
+            )
+        except Exception:
+            sent_msg = bot.send_message(
+                chat_id,
+                text or caption,
+                parse_mode="HTML",
+                reply_markup=markup,
+                disable_web_page_preview=True
+            )
+
         user_last_message[user_id] = sent_msg.message_id
         return sent_msg
     except Exception as e:
         logger.error(f"Error in clean_ui_and_send_menu: {e}")
-        # Fallback
         try:
             sent_msg = bot.send_message(chat_id, text or caption, parse_mode="HTML", reply_markup=markup)
             user_last_message[user_id] = sent_msg.message_id
@@ -3176,9 +3179,9 @@ def show_recharge_methods(chat_id, message_id, user_id):
     
     markup = InlineKeyboardMarkup(row_width=2)
     markup.add(
-        InlineKeyboardButton("💳 UPI Payment", callback_data="recharge_upi", style="success")
+        InlineKeyboardButton("💳 UPI Payment", callback_data="recharge_upi")
     )
-    markup.add(InlineKeyboardButton("🔙 Back", callback_data="back_to_menu", style="primary"))
+    markup.add(InlineKeyboardButton("🔙 Back", callback_data="back_to_menu"))
     
     edit_or_resend(
         chat_id,
@@ -3215,7 +3218,7 @@ def process_recharge_amount(msg):
 </blockquote>"""
         
         markup = InlineKeyboardMarkup()
-        markup.add(InlineKeyboardButton("✅ I've Paid — Confirm", callback_data="upi_deposited", style="success"))
+        markup.add(InlineKeyboardButton("✅ I've Paid — Confirm", callback_data="upi_deposited"))
         
         upi_payment_states[user_id] = {
             "amount": amount,
@@ -3312,8 +3315,8 @@ def handle_screenshot_input(msg):
 
         markup = InlineKeyboardMarkup(row_width=2)
         markup.add(
-            InlineKeyboardButton("✅ Approve", callback_data=f"approve_rech|{req_id}", style="success"),
-            InlineKeyboardButton("❌ Reject", callback_data=f"cancel_rech|{req_id}", style="danger")
+            InlineKeyboardButton("✅ Approve", callback_data=f"approve_rech|{req_id}"),
+            InlineKeyboardButton("❌ Reject", callback_data=f"cancel_rech|{req_id}")
         )
         
         # Send to all admins
@@ -3858,8 +3861,8 @@ def show_referral_info(user_id, chat_id):
     message += f"Start sharing and earning today! 🎉"
     
     markup = InlineKeyboardMarkup()
-    markup.add(InlineKeyboardButton("📤 Share Link", url=f"https://t.me/share/url?url={referral_link}&text=Join%20GMS%20OTP%20Bot%20%E2%80%94%20Fast%2C%20Reliable%20Telegram%20Account%20Buying!", style="success"))
-    markup.add(InlineKeyboardButton("🔙 Back", callback_data="back_to_menu", style="primary"))
+    markup.add(InlineKeyboardButton("📤 Share Link", url=f"https://t.me/share/url?url={referral_link}&text=Join%20GMS%20OTP%20Bot%20%E2%80%94%20Fast%2C%20Reliable%20Telegram%20Account%20Buying!"))
+    markup.add(InlineKeyboardButton("🔙 Back", callback_data="back_to_menu"))
     
     sent_msg = bot.send_message(chat_id, message, parse_mode="Markdown", reply_markup=markup)
     user_last_message[user_id] = sent_msg.message_id
@@ -3898,24 +3901,24 @@ def show_admin_panel(chat_id):
     
     markup = InlineKeyboardMarkup(row_width=2)
     markup.add(
-        InlineKeyboardButton("📲 Add Account", callback_data="add_account", style="success"),
-        InlineKeyboardButton("📣 Broadcast", callback_data="broadcast_menu", style="primary")
+        InlineKeyboardButton("➕ Add Account", callback_data="add_account"),
+        InlineKeyboardButton("📢 Broadcast", callback_data="broadcast_menu")
     )
     markup.add(
-        InlineKeyboardButton("🔄 Refund", callback_data="refund_start", style="primary"),
-        InlineKeyboardButton("🏆 Ranking", callback_data="ranking", style="primary")
+        InlineKeyboardButton("💸 Refund", callback_data="refund_start"),
+        InlineKeyboardButton("🏆 Ranking", callback_data="ranking")
     )
     markup.add(
-        InlineKeyboardButton("📨 Message User", callback_data="message_user", style="primary"),
-        InlineKeyboardButton("➖ Deduct Balance", callback_data="admin_deduct_start", style="danger")
+        InlineKeyboardButton("✉️ Message User", callback_data="message_user"),
+        InlineKeyboardButton("➖ Deduct Balance", callback_data="admin_deduct_start")
     )
     markup.add(
-        InlineKeyboardButton("🔒 Ban User", callback_data="ban_user", style="danger"),
-        InlineKeyboardButton("🔓 Unban User", callback_data="unban_user", style="success")
+        InlineKeyboardButton("🚫 Ban User", callback_data="ban_user"),
+        InlineKeyboardButton("✅ Unban User", callback_data="unban_user")
     )
     markup.add(
-        InlineKeyboardButton("🗺️ Countries", callback_data="manage_countries", style="primary"),
-        InlineKeyboardButton("🎫 Coupons", callback_data="admin_coupon_menu", style="success")
+        InlineKeyboardButton("🌍 Countries", callback_data="manage_countries"),
+        InlineKeyboardButton("🎟 Coupons", callback_data="admin_coupon_menu")
     )
     
     # Show admin list for main admin
@@ -3948,13 +3951,13 @@ def show_country_management(chat_id):
     
     markup = InlineKeyboardMarkup(row_width=2)
     markup.add(
-        InlineKeyboardButton("🌐 Add Country", callback_data="add_country", style="success"),
-        InlineKeyboardButton("💱 Edit Price", callback_data="edit_price", style="primary")
+        InlineKeyboardButton("➕ Add Country", callback_data="add_country"),
+        InlineKeyboardButton("✏️ Edit Price", callback_data="edit_price")
     )
     markup.add(
-        InlineKeyboardButton("🗑️ Remove Country", callback_data="remove_country", style="danger")
+        InlineKeyboardButton("🗑 Remove Country", callback_data="remove_country")
     )
-    markup.add(InlineKeyboardButton("🔙 Back to Admin", callback_data="admin_panel", style="primary"))
+    markup.add(InlineKeyboardButton("🔙 Back to Admin", callback_data="admin_panel"))
     
     sent_msg = bot.send_message(chat_id, text, reply_markup=markup, parse_mode="Markdown")
     user_last_message[chat_id] = sent_msg.message_id
