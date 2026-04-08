@@ -54,8 +54,11 @@ API_HASH = os.getenv('API_HASH', '823e6e8c081fe363e6d739b39dc19e07')
 # e.g. OWNER_IDS=8316947415,6509168409,987654321
 _raw_owner_ids = os.getenv('OWNER_IDS', '')
 OWNER_IDS = [int(x.strip()) for x in _raw_owner_ids.split(',') if x.strip().isdigit()]
-if ADMIN_ID not in OWNER_IDS:
-    OWNER_IDS.insert(0, ADMIN_ID)
+
+# Fix: replace ADMIN_ID with ADMIN_IDS[0] (first admin) or loop over all admins
+if ADMIN_IDS[0] not in OWNER_IDS:
+    OWNER_IDS.insert(0, ADMIN_IDS[0])
+
 OWNER_IDS = OWNER_IDS[:5]  # Max 5 owners
 
 # Recharge QR and UPI settings (configurable via env vars)
